@@ -37,11 +37,14 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  console.log(urlDatabase);
-  console.log(req.params.id);
   delete urlDatabase[req.params.id];
-  console.log(urlDatabase);
   res.redirect(`/urls`);
+});
+
+app.post("/urls/:id/edit", (req, res) => {
+  urlDatabase[req.params.id] = req.body.newURL;
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
+  res.render("urls_show", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
