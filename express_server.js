@@ -48,8 +48,7 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  const user = req.body.login;
-  res.cookie('username', user);
+  res.cookie('username', req.body.username);
   res.redirect(`/urls`);
 })
 
