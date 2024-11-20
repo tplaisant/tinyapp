@@ -17,7 +17,15 @@
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
-    </div>
+    </div>    
+    <p class="card-text">
+      <% if(username){%>
+        User: <%= username %>
+        <form method="POST" action="/logout">
+          <button type="submit" class="btn btn-primary">Logout</button>
+        </form>
+      <% } else {%>
+    </p>
     <form method="POST" action="/login">
       <input
         class="form-control"
@@ -27,8 +35,6 @@
       />
       <button type="submit" class="btn btn-primary">Login</button>
     </form>
-    <p class="card-text">
-      User: <%= username %>
-    </p>
+    <% } %>
   </nav>
 </header>
