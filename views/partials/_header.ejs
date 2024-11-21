@@ -19,8 +19,8 @@
       </div>
     </div>    
     <p class="card-text">
-      <% if(username){%>
-        User: <%= username %>
+      <% if(user){%>
+        User: <%= user.email %>
         <form method="POST" action="/logout">
           <button type="submit" class="btn btn-primary">Logout</button>
         </form>
