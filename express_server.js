@@ -71,11 +71,11 @@ app.post("/register", (req, res) => {
   for (const key of Object.keys(users)) {
     if (users[key].email === email) { // Checking if email already exists in the DB
       error = true;
-      res.status(400).end();              
+      res.status(400).send('Email already in use');              
     }
   }
     if (error === false) {
-      Object.assign(users, newUser);
+      users[id] = newUser;
       res.cookie('user_id', id);
       res.redirect('/urls');
     }
