@@ -28,6 +28,30 @@ const generateRandomString = () => {
   return Math.random().toString(36).substring(2,5+2);
 };
 
+const findUser = (email) => {
+  for (const key of Object.keys(users)) {
+    if (users[key].email === email) { // Checking if email already exists in the DB
+      return true;            
+    }
+  }
+}
+
+const checkPass = (password) => {
+  for (const key of Object.keys(users)) {
+    if (users[key].password === password) { // Checking if password matches the DB
+      return true;            
+    }
+  }  
+}
+
+const retrieveID = (email) => {
+  for (const key of Object.keys(users)) {
+    if (users[key].email === email) { // Checking if password matches the DB
+      return key;            
+    }
+  }   
+}
+
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
@@ -48,21 +72,28 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  res.render("register");
+  const user = users[req.cookies["user_id"]];
+  const templateVars = {
+    user,
+  };
+  res.render("register", templateVars);
 });
 
 app.get("/login", (req, res) => {
-  res.render("login");
+  const user = users[req.cookies["user_id"]];
+  const templateVars = {
+    user,
+  };
+  res.render("login", templateVars);
 });
 
 app.post("/register", (req, res) => {  
   if (req.body.email === '' || req.body.password === '') {
-    res.status(400).end();
+    res.status(400).send('Fill out both fields');
   } else {
     const id = generateRandomString();
     const email = req.body.email;
     const password = req.body.password;
-    let error = false;
 
     const newUser = {
       [id]: {
@@ -71,14 +102,9 @@ app.post("/register", (req, res) => {
         password,
       }
     }
-
-  for (const key of Object.keys(users)) {
-    if (users[key].email === email) { // Checking if email already exists in the DB
-      error = true;
-      res.status(400).send('Email already in use');              
-    }
-  }
-    if (error === false) {
+    if (findUser(email)) {
+      res.status(400).send('Email already in use');
+    } else {
       users[id] = newUser;
       res.cookie('user_id', id);
       res.redirect('/urls');
@@ -87,7 +113,6 @@ app.post("/register", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
   const newURL = generateRandomString();
   const user = users[req.cookies["user_id"]];
   const templateVars = { 
@@ -115,13 +140,24 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username);
-  res.redirect(`/urls`);
+  const email = req.body.email;
+  const password = req.body.password;
+
+  if (findUser(email)) {
+    if (checkPass(password)) {      
+      res.cookie('user_id', retrieveID(email));
+      res.redirect(`/urls`);
+    } else {
+      res.status(403).send('Password does not match');  
+    }   
+  } else {
+    res.status(403).send('Email not found');
+  };  
 })
 
 app.post("/logout", (req, res) => {
   res.clearCookie('user_id');
-  res.redirect(`/urls`);
+  res.redirect(`/login`);
 })
 
 app.get("/urls/new", (req, res) => {
