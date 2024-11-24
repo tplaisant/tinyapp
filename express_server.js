@@ -51,21 +51,35 @@ app.get("/register", (req, res) => {
   res.render("register");
 });
 
-app.post("/register", (req, res) => {
-  const id = generateRandomString();
-  const email = req.body.email;
-  const password = req.body.password;
+app.post("/register", (req, res) => {  
+  if (req.body.email === '' || req.body.password === '') {
+    res.status(400).end();
+  } else {
+    const id = generateRandomString();
+    const email = req.body.email;
+    const password = req.body.password;
+    let error = false;
 
-  const newUser = {
-    [id]: {
-      id,
-      email,
-      password,
+    const newUser = {
+      [id]: {
+        id,
+        email,
+        password,
+      }
+    }
+
+  for (const key of Object.keys(users)) {
+    if (users[key].email === email) { // Checking if email already exists in the DB
+      error = true;
+      res.status(400).end();              
     }
   }
-  Object.assign(users, newUser);
-  res.cookie('user_id', id);
-  res.redirect('/urls')
+    if (error === false) {
+      Object.assign(users, newUser);
+      res.cookie('user_id', id);
+      res.redirect('/urls');
+    }
+  }
 });
 
 app.post("/urls", (req, res) => {
