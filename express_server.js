@@ -51,6 +51,10 @@ app.get("/register", (req, res) => {
   res.render("register");
 });
 
+app.get("/login", (req, res) => {
+  res.render("login");
+});
+
 app.post("/register", (req, res) => {  
   if (req.body.email === '' || req.body.password === '') {
     res.status(400).end();
