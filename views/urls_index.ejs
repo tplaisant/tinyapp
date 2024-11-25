@@ -29,14 +29,14 @@
           </tr>
         </thead>
         <tbody>
-          <% for (let id in urls) { %>
+          <% for (const key of Object.keys(urls)) {%>
             <tr>              
-              <td><%= id %></td>              
-              <td><%= urls[id] %></td>
-              <form method="POST" action="/urls/<%= id %>/delete">
+              <td><%= urls[key].shortURL %></td>              
+              <td><%= urls[key].longURL %></td>
+              <form method="POST" action="/urls/<%= key %>/delete">
                 <td><button type="submit" class="btn btn-primary">Delete</button></td>
               </form>
-              <form method="POST" action="/urls/<%= id %>/edit">
+              <form method="GET" action="/urls/<%= key %>">
                 <td><button type="submit" class="btn btn-primary">Edit</button></td>
               </form>
             </tr>

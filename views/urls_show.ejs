@@ -16,6 +16,7 @@
     <div class="card text-center">
       <div class="card-header"></div>
       <div class="card-body">
+        <% if (owner) { %>
         <h5 class="card-title">TinyURL for: <%= longURL %></h5>
         <p class="card-text">
           Short URL ID: <a href="/urls/<%= id %>"><%= id %></a>
@@ -32,6 +33,9 @@
             />
             <button type="submit" class="btn btn-primary">Submit</button>
           </div>
+          <% } else { %>  
+            <h5 class="card-title">Only the owner of the URL is allowed to see it</h5>
+          <% } %>
         </form>
       </div>
       <div class="card-footer text-muted"></div>

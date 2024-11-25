@@ -7,8 +7,18 @@ app.use(cookieParser());
 app.set("view engine", "ejs");
 
 const urlDatabase = {
-  b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "123",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "123",
+  },
+  sgq3y6: {
+    longURL: "https://www.9gag.com",
+    userID: "123",
+  },
 };
 
 const users = {
@@ -60,7 +70,23 @@ const findShortURL = (shortURL) => {
     if (key === shortURL) { // Checking if short URL already exists in the DB
       return true;            
     }
-  }  
+  }
+  return false;  
+}
+
+const urlsForUser = (id) => {
+  let urls = {};
+  
+  for (const key of Object.keys(urlDatabase)) {
+    if (urlDatabase[key].userID === id.id) {
+      const url = {
+          shortURL: key,
+          longURL: urlDatabase[key].longURL,           
+      }      
+      urls[key] = url;            
+    }
+  }
+  return urls;
 }
 
 app.use(express.urlencoded({ extended: true }));
@@ -76,7 +102,7 @@ app.get("/urls.json", (req, res) => {
 app.get("/urls", (req, res) => {
   const user = users[req.cookies["user_id"]];
   const templateVars = { 
-    urls: urlDatabase,
+    urls: urlsForUser(user),
     user,
   };
   res.render("urls_index", templateVars);
@@ -129,17 +155,27 @@ app.get("/u/:id", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   const user = users[req.cookies["user_id"]];
+  let owner = false;
+
+  console.log(urlDatabase[req.params.id].userID);
+    if (user.id === urlDatabase[req.params.id].userID) {
+      owner = true;
+    } else {
+      owner = false;
+    };
+
   const templateVars = { 
     id: req.params.id, 
     user,
-    longURL: urlDatabase[req.params.id] 
+    longURL: urlDatabase[req.params.id].longURL,
+    owner: owner,
   };
 
-  if (findShortURL(req.params.id)) {
+  // if (findShortURL(req.params.id)) {
     res.render("urls_show", templateVars);
-  } else {
-    //HTML ERROR MESSAGE
-  }  
+  // } else {
+  //   //HTML ERROR MESSAGE
+  // }  
 });
 
 app.get("/hello", (req, res) => {
@@ -186,8 +222,20 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id];
-  res.redirect(`/urls`);
+  const user = users[req.cookies["user_id"]];
+  const templateVars = { 
+    user,
+  };
+  console.log(user);
+  console.log(urlDatabase[req.params.id].userID);
+
+  if (user.id === urlDatabase[req.params.id].userID) {    
+    console.log(urlDatabase);
+    delete urlDatabase[req.params.id];
+    console.log(urlDatabase);
+  }
+  
+  res.redirect(`/urls`, templateVars);
 });
 
 app.post("/urls/:id", (req, res) => {
