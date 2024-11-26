@@ -1,4 +1,4 @@
-const { users, urlDatabase, generateRandomString, findUser, checkPass, retrieveID, findShortURL, urlsForUser } = require("./functions.js");
+const { urlDatabase, generateRandomString, getUserByEmail, checkPass, retrieveID, findShortURL, urlsForUser } = require("./helpers.js");
 const express = require("express");
 const app = express();
 const bcrypt = require("bcryptjs");
@@ -7,11 +7,28 @@ const cookieSession = require('cookie-session');
 
 app.use(cookieSession({
   name: 'user_id',
-  keys: [ 'dieueyf7huienejnfef', 'dieueyf7huienejnfef' ]
+  keys: [ 'dieueyf7huienejnfef', 'lkjdhalkdwblsdw' ]
 }));
 app.set("view engine", "ejs");
-
 app.use(express.urlencoded({ extended: true }));
+
+let users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+  dnx9l: {
+    id: 'dnx9l',
+    email: 'tiago@tiago',
+    password: '$2a$10$E3wn03/yqqABgtaYQCMp.e7zlnALkliPzDVwcJLdY9XT0PRiJDJ2e'
+  },
+};
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -114,7 +131,7 @@ app.post("/register", (req, res) => {
         password,
       // }
     }
-    if (findUser(email)) {
+    if (getUserByEmail(email, users)) {
       res.status(400).send('Email already in use');
     } else {
       users[id] = newUser;
@@ -164,9 +181,9 @@ app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
-  if (findUser(email)) {
-    if (checkPass(email, password)) {
-      req.session.user_id = retrieveID(email);
+  if (getUserByEmail(email, users)) {
+    if (checkPass(email, password, users)) {
+      req.session.user_id = retrieveID(email, users);
       res.redirect(`/urls`);
     } else {
       res.status(403).send('Password does not match');  
@@ -184,5 +201,3 @@ app.post("/logout", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
-module.exports = { urlDatabase };
