@@ -1,93 +1,12 @@
+const { users, urlDatabase, generateRandomString, findUser, checkPass, retrieveID, findShortURL, urlsForUser } = require("./functions.js");
 const express = require("express");
 const app = express();
+const bcrypt = require("bcryptjs");
 const PORT = 8080; // default port 8080
 const cookieParser = require('cookie-parser');
 
 app.use(cookieParser());
 app.set("view engine", "ejs");
-
-const urlDatabase = {
-  b6UTxQ: {
-    longURL: "https://www.tsn.ca",
-    userID: "123",
-  },
-  i3BoGr: {
-    longURL: "https://www.google.ca",
-    userID: "123",
-  },
-  sgq3y6: {
-    longURL: "https://www.9gag.com",
-    userID: "123",
-  },
-};
-
-const users = {
-  userRandomID: {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur",
-  },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk",
-  },
-};
-
-const generateRandomString = () => {
-  return Math.random().toString(36).substring(2,5+2);
-};
-
-const findUser = (email) => {
-  for (const key of Object.keys(users)) {
-    if (users[key].email === email) { // Checking if email already exists in the DB
-      return true;            
-    }
-  }
-  return false;
-}
-
-const checkPass = (password) => {
-  for (const key of Object.keys(users)) {
-    if (users[key].password === password) { // Checking if password matches the DB
-      return true;            
-    }
-  }
-  return false;
-}
-
-const retrieveID = (email) => {
-  for (const key of Object.keys(users)) {
-    if (users[key].email === email) {
-      return key;            
-    }
-  }
-  return false;
-}
-  
-const findShortURL = (shortURL) => {
-  for (const key of Object.keys(urlDatabase)) {
-    if (key === shortURL) { // Checking if short URL already exists in the DB
-      return true;            
-    }
-  }
-  return false;  
-}
-
-const urlsForUser = (id) => {
-  let urls = {};
-  
-  for (const key of Object.keys(urlDatabase)) {
-    if (urlDatabase[key].userID === id.id) {
-      const url = {
-          shortURL: key,
-          longURL: urlDatabase[key].longURL,           
-      }      
-      urls[key] = url;            
-    }
-  }
-  return urls;
-}
 
 app.use(express.urlencoded({ extended: true }));
 
@@ -171,11 +90,7 @@ app.get("/urls/:id", (req, res) => {
     owner: owner,
   };
 
-  // if (findShortURL(req.params.id)) {
     res.render("urls_show", templateVars);
-  // } else {
-  //   //HTML ERROR MESSAGE
-  // }  
 });
 
 app.get("/hello", (req, res) => {
@@ -188,19 +103,21 @@ app.post("/register", (req, res) => {
   } else {
     const id = generateRandomString();
     const email = req.body.email;
-    const password = req.body.password;
+    const password = bcrypt.hashSync(req.body.password, 10);
 
     const newUser = {
-      [id]: {
+      // [id]: {
         id,
         email,
         password,
-      }
+      // }
     }
     if (findUser(email)) {
       res.status(400).send('Email already in use');
     } else {
+      console.log(users);
       users[id] = newUser;
+      console.log(users);
       res.cookie('user_id', id);
       res.redirect('/urls');
     }
@@ -223,19 +140,13 @@ app.post("/urls", (req, res) => {
 
 app.post("/urls/:id/delete", (req, res) => {
   const user = users[req.cookies["user_id"]];
-  const templateVars = { 
-    user,
-  };
-  console.log(user);
-  console.log(urlDatabase[req.params.id].userID);
 
-  if (user.id === urlDatabase[req.params.id].userID) {    
-    console.log(urlDatabase);
-    delete urlDatabase[req.params.id];
-    console.log(urlDatabase);
-  }
-  
-  res.redirect(`/urls`, templateVars);
+  if (user.id === urlDatabase[req.params.id].userID) {   
+    delete urlDatabase[req.params.id];    
+    res.redirect(`/urls`);
+  } else {
+    res.status(403).send('Only the owner may edit/delete the URL');
+  }    
 });
 
 app.post("/urls/:id", (req, res) => {
@@ -249,12 +160,12 @@ app.post("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-app.post("/login", (req, res) => {
+app.post("/login", (req, res) => {  
   const email = req.body.email;
   const password = req.body.password;
 
   if (findUser(email)) {
-    if (checkPass(password)) {      
+    if (checkPass(email, password)) {      
       res.cookie('user_id', retrieveID(email));
       res.redirect(`/urls`);
     } else {
@@ -273,3 +184,5 @@ app.post("/logout", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+module.exports = { urlDatabase };
