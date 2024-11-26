@@ -1,32 +1,17 @@
 const { assert } = require('chai');
 
 const { getUserByEmail } = require('../helpers.js');
-
-const testUsers = {
-  "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
-  },
-  "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
-    password: "dishwasher-funk"
-  }
-};
+const { users } = require('../express_server.js');
 
 describe('getUserByEmail', function() {
   it('should return a user with valid email', function() {
-    const user = getUserByEmail("user@example.com", testUsers)
-    const nonUser = getUserByEmail("user123@example.com", testUsers)
+    const user = getUserByEmail("user@example.com", users)
     const expectedUserID = "userRandomID";
     // Write your assert statement here
     assert.strictEqual(user, expectedUserID); 
-    assert.strictEqual(nonUser, undefined); 
   });
   it('should return undefined due to non-valid email', function() {    
-    const nonUser = getUserByEmail("user123@example.com", testUsers)
-    // Write your assert statement here
+    const nonUser = getUserByEmail("user123@example.com", users)
     assert.strictEqual(nonUser, undefined); 
   });  
 });

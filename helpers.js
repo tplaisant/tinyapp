@@ -25,7 +25,7 @@ const getUserByEmail = (email, users) => {
       return key;            
     }
   }
-  return undefined;
+  return;
 }
 
 const checkPass = (email, password, users) => {
