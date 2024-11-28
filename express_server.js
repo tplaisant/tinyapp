@@ -55,11 +55,16 @@ app.get("/urls.json", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const user = users[req.session.user_id];
-  const templateVars = { 
-    urls: urlsForUser(user.id, urlDatabase),
-    user,
-  };
-  res.render("urls_index", templateVars);
+  if (user !== undefined) {
+    const templateVars = { 
+      urls: urlsForUser(user.id, urlDatabase),
+      user,
+    };
+    res.render("urls_index", templateVars);  
+  } else {
+    res.redirect('/login');
+  }
+  
 });
 
 app.get("/register", (req, res) => {
