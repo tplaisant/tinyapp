@@ -1,20 +1,5 @@
 const bcrypt = require("bcryptjs");
 
-urlDatabase = {
-  b6UTxQ: {
-    longURL: "https://www.tsn.ca",
-    userID: "userRandomID",
-  },
-  i3BoGr: {
-    longURL: "https://www.google.ca",
-    userID: "123",
-  },
-  sgq3y6: {
-    longURL: "https://www.9gag.com",
-    userID: "dnx9l",
-  },
-};
-
 const generateRandomString = () => {
   return Math.random().toString(36).substring(2,5+2);
 };
@@ -57,19 +42,19 @@ const findShortURL = (shortURL) => {
   return false;  
 }
 
-const urlsForUser = (id) => {
+const urlsForUser = (id, urlDatabase) => {
   let urls = {};
-  
+
   for (const key of Object.keys(urlDatabase)) {
-    if (urlDatabase[key].userID === id.id) {
-      const url = {
-          shortURL: key,
-          longURL: urlDatabase[key].longURL,           
-      }      
-      urls[key] = url;            
-    }
+    if (urlDatabase[key].userId === id) {
+      const url = {       
+            longURL: urlDatabase[key].longURL,           
+            userId: id,
+      }
+      urls[key] = url;    
+    }      
   }
   return urls;
 }
 
-module.exports =  { urlDatabase, generateRandomString, getUserByEmail, checkPass, retrieveID, findShortURL, urlsForUser };
+module.exports =  { generateRandomString, getUserByEmail, checkPass, retrieveID, findShortURL, urlsForUser };

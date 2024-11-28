@@ -31,7 +31,7 @@
         <tbody>
           <% for (const key of Object.keys(urls)) {%>
             <tr>              
-              <td><%= urls[key].shortURL %></td>              
+              <td><%= key %></td>              
               <td><%= urls[key].longURL %></td>
               <form method="POST" action="/urls/<%= key %>/delete">
                 <td><button type="submit" class="btn btn-primary">Delete</button></td>

@@ -1,4 +1,4 @@
-const { urlDatabase, generateRandomString, getUserByEmail, checkPass, retrieveID, findShortURL, urlsForUser } = require("./helpers.js");
+const { generateRandomString, getUserByEmail, checkPass, retrieveID, findShortURL, urlsForUser } = require("./helpers.js");
 const express = require("express");
 const app = express();
 const bcrypt = require("bcryptjs");
@@ -30,6 +30,21 @@ let users = {
   },
 };
 
+const urlDatabase = {
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userId: "userRandomID",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userId: "123",
+  },
+  sgq3y6: {
+    longURL: "https://www.9gag.com",
+    userId: "dnx9l",
+  },
+};
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -41,7 +56,7 @@ app.get("/urls.json", (req, res) => {
 app.get("/urls", (req, res) => {
   const user = users[req.session.user_id];
   const templateVars = { 
-    urls: urlsForUser(user),
+    urls: urlsForUser(user.id, urlDatabase),
     user,
   };
   res.render("urls_index", templateVars);
@@ -96,7 +111,7 @@ app.get("/urls/:id", (req, res) => {
   const user = users[req.session.user_id];
   let owner = false;
 
-    if (user.id === urlDatabase[req.params.id].userID) {
+    if (user.id === urlDatabase[req.params.id].userId) {
       owner = true;
     } else {
       owner = false;
@@ -125,11 +140,9 @@ app.post("/register", (req, res) => {
     const password = bcrypt.hashSync(req.body.password, 10);
 
     const newUser = {
-      // [id]: {
         id,
         email,
         password,
-      // }
     }
     if (getUserByEmail(email, users)) {
       res.status(400).send('Email already in use');
@@ -158,7 +171,7 @@ app.post("/urls", (req, res) => {
 app.post("/urls/:id/delete", (req, res) => {
   const user = users[req.session.user_id];
 
-  if (user.id === urlDatabase[req.params.id].userID) {   
+  if (user.id === urlDatabase[req.params.id].userId) {   
     delete urlDatabase[req.params.id];    
     res.redirect(`/urls`);
   } else {
