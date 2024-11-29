@@ -1,4 +1,5 @@
 const { generateRandomString, getUserByEmail, checkPass, retrieveID, findShortURL, urlsForUser } = require("./helpers.js");
+const { users, urlDatabase} = require("./data.js");
 const express = require("express");
 const app = express();
 const bcrypt = require("bcryptjs");
@@ -12,41 +13,19 @@ app.use(cookieSession({
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 
-let users = {
-  userRandomID: {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur",
-  },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk",
-  },
-  dnx9l: {
-    id: 'dnx9l',
-    email: 'tiago@tiago',
-    password: '$2a$10$E3wn03/yqqABgtaYQCMp.e7zlnALkliPzDVwcJLdY9XT0PRiJDJ2e'
-  },
-};
-
-const urlDatabase = {
-  b6UTxQ: {
-    longURL: "https://www.tsn.ca",
-    userId: "userRandomID",
-  },
-  i3BoGr: {
-    longURL: "https://www.google.ca",
-    userId: "123",
-  },
-  sgq3y6: {
-    longURL: "https://www.9gag.com",
-    userId: "dnx9l",
-  },
-};
-
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  const user = users[req.session.user_id];
+  if (user !== undefined) {
+    // If logged in, go to urls
+    const templateVars = { 
+      urls: urlsForUser(user.id, urlDatabase),
+      user,
+    };
+    res.render("urls_index", templateVars);  
+  } else {
+    // If not logged in, go to login page
+    res.redirect('/login');
+  }
 });
 
 app.get("/urls.json", (req, res) => {
@@ -56,12 +35,14 @@ app.get("/urls.json", (req, res) => {
 app.get("/urls", (req, res) => {
   const user = users[req.session.user_id];
   if (user !== undefined) {
+    // If logged in, go to urls
     const templateVars = { 
       urls: urlsForUser(user.id, urlDatabase),
       user,
     };
     res.render("urls_index", templateVars);  
   } else {
+    // If not logged in, go to login page
     res.redirect('/login');
   }
   
@@ -73,8 +54,10 @@ app.get("/register", (req, res) => {
     user,
   };
   if (user) {
+    // If logged in, go to urls
     res.redirect('/urls');
   } else {
+    // If not logged in, proceed to registration page
     res.render("register", templateVars);
   }  
 });
@@ -85,8 +68,10 @@ app.get("/login", (req, res) => {
     user,
   };
   if (user) {
+    // If logged in, go to urls
     res.redirect('/urls');
   } else {
+    // If not logged in, go to login page
     res.render("login", templateVars);
   }  
 });
@@ -97,6 +82,7 @@ app.get("/urls/new", (req, res) => {
     user,
   };
   if (user) {
+    // Can only create a new URL if logged in
     res.render("urls_new", templateVars);
   } else {
     res.render("login", templateVars);
@@ -109,13 +95,24 @@ app.get("/u/:id", (req, res) => {
   const templateVars = {
     user,
   };
-  res.redirect(longURL, templateVars);
+
+  if (typeof user !== 'undefined' && user.id === longURL.userId) {
+    // Can only see a URL if you own it
+    res.redirect(longURL.longURL);
+  } else if (user) {
+    // If logged in but not the owner, go to URLs
+    res.redirect('/urls');
+  }  else {
+    res.render("login", templateVars);
+  }
+  
 });
 
 app.get("/urls/:id", (req, res) => {
   const user = users[req.session.user_id];
   let owner = false;
 
+  if (typeof user !== 'undefined') {
     if (user.id === urlDatabase[req.params.id].userId) {
       owner = true;
     } else {
@@ -130,6 +127,10 @@ app.get("/urls/:id", (req, res) => {
   };
 
     res.render("urls_show", templateVars);
+  } else {
+    res.render("login");
+  }
+    
 });
 
 app.get("/hello", (req, res) => {
@@ -165,16 +166,19 @@ app.post("/urls", (req, res) => {
   const templateVars = { 
     user,
   };
-  if (user) {
-    urlDatabase[newURL] = req.body.longURL;
-    res.redirect(`/urls/${newURL}`, templateVars);
+  if (typeof user !== 'undefined') {
+    urlDatabase[newURL] = {
+      longURL: req.body.longURL,
+      userId: user.id,
+    }
+    res.redirect(`/urls/${newURL}`)//, templateVars);
   } else {
     res.render("login", templateVars);
   }    
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  const user = users[req.session.user_id];
+  const user = users[req.session.user_id];  
 
   if (user.id === urlDatabase[req.params.id].userId) {   
     delete urlDatabase[req.params.id];    
@@ -212,7 +216,7 @@ app.post("/login", (req, res) => {
 })
 
 app.post("/logout", (req, res) => {
-  req.session['user_id'] = null;
+  req.session = null;
   res.redirect(`/login`);
 })
 

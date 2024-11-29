@@ -19,7 +19,7 @@
       </div>
     </div>    
     <p class="card-text">
-      <% if(user){%>
+      <% if(typeof user !== 'undefined'){%>
         Logged in as: <%= user.email %>
         <form method="POST" action="/logout">
           <button type="submit" class="btn btn-primary">Logout</button>
