@@ -78,27 +78,3 @@ describe('urlsForUser', function() {
     assert.notProperty(result, '1q2tDs'); // "1q2tDs" is owned by "user3"
   });
 });
-
-// const urlDatabase1 = {
-//   "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userId: "user1" },
-//   "9sm5xK": { longURL: "http://www.google.com", userId: "user2" },
-//   "a1b2c3": { longURL: "http://www.example.com", userId: "user1" }
-// };
-
-// const urlsForUser = (id, urlDatabase) => {
-//   let urls = {};
-
-//   for (const key of Object.keys(urlDatabase)) {
-//     console.log(urlDatabase[key].userId);
-//     if (urlDatabase[key].userId === id) {
-//       const url = {       
-//             longURL: urlDatabase[key].longURL,           
-//             userId: id,
-//       }
-//       urls[key] = url;    
-//     }      
-//   }
-//   return urls;
-// }
-
-// console.log(urlsForUser('user1', urlDatabase1));
