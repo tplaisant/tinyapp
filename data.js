@@ -21,9 +21,9 @@ const urlDatabase = {
     longURL: "https://www.tsn.ca",
     userId: "userRandomID",
   },
-  i3BoGr: {
+  '2r1wc': {
     longURL: "https://www.google.ca",
-    userId: "123",
+    userId: "dnx9l",
   },
   sgq3y6: {
     longURL: "https://www.9gag.com",

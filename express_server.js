@@ -85,7 +85,8 @@ app.get("/urls/new", (req, res) => {
     // Can only create a new URL if logged in
     res.render("urls_new", templateVars);
   } else {
-    res.render("login", templateVars);
+    // If not logged in, go to login page
+    res.redirect('/login');
   }   
 });
 
@@ -100,10 +101,12 @@ app.get("/u/:id", (req, res) => {
     // Can only see a URL if you own it
     res.redirect(longURL.longURL);
   } else if (user) {
-    // If logged in but not the owner, go to URLs
-    res.redirect('/urls');
+    // If logged in but not the owner, go to login page
+    res.redirect('/login');
   }  else {
-    res.render("login", templateVars);
+    // res.render("login", templateVars);
+    // If not logged in, go to login page
+    res.redirect('/login');
   }
   
 });
@@ -112,7 +115,8 @@ app.get("/urls/:id", (req, res) => {
   const user = users[req.session.user_id];
   let owner = false;
 
-  if (typeof user !== 'undefined') {
+  if (typeof user !== 'undefined' && typeof urlDatabase[req.params.id] !== 'undefined') {
+
     if (user.id === urlDatabase[req.params.id].userId) {
       owner = true;
     } else {
@@ -125,16 +129,12 @@ app.get("/urls/:id", (req, res) => {
     longURL: urlDatabase[req.params.id].longURL,
     owner: owner,
   };
-
+    // Only the owner is allowed to see this page
     res.render("urls_show", templateVars);
   } else {
     res.render("login");
   }
     
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
 app.post("/register", (req, res) => {  
@@ -150,7 +150,7 @@ app.post("/register", (req, res) => {
         email,
         password,
     }
-    if (getUserByEmail(email, users)) {
+    if (getUserByEmail(email, users)) { // Checking if email is already being used
       res.status(400).send('Email already in use');
     } else {
       users[id] = newUser;
@@ -167,11 +167,13 @@ app.post("/urls", (req, res) => {
     user,
   };
   if (typeof user !== 'undefined') {
+    // Success. Creates new URL
     urlDatabase[newURL] = {
       longURL: req.body.longURL,
       userId: user.id,
     }
-    res.redirect(`/urls/${newURL}`)//, templateVars);
+    // Go to the new page
+    res.redirect(`/urls/${newURL}`)
   } else {
     res.render("login", templateVars);
   }    
@@ -181,7 +183,7 @@ app.post("/urls/:id/delete", (req, res) => {
   const user = users[req.session.user_id];  
 
   if (user.id === urlDatabase[req.params.id].userId) {   
-    delete urlDatabase[req.params.id];    
+    delete urlDatabase[req.params.id]; // Deletes entry from DB
     res.redirect(`/urls`);
   } else {
     res.status(403).send('Only the owner may edit/delete the URL');
@@ -190,13 +192,39 @@ app.post("/urls/:id/delete", (req, res) => {
 
 app.post("/urls/:id", (req, res) => {
   const user = users[req.session.user_id];
-  urlDatabase[req.params.id] = req.body.newURL;
-  const templateVars = { 
-    id: req.params.id, 
-    user,
-    longURL: urlDatabase[req.params.id] 
-  };
-  res.render("urls_show", templateVars);
+
+  if (typeof user !== 'undefined') {
+    urlDatabase[req.params.id] = req.body.newURL;
+    const templateVars = { 
+      id: req.params.id, 
+      user,
+      longURL: urlDatabase[req.params.id] 
+    };
+    res.render("urls_show", templateVars);
+  }  
+});
+
+app.post("/urls/:id/edit", (req, res) => {
+  const user = users[req.session.user_id];
+  let owner = false;
+
+  if (typeof user !== 'undefined') {
+    urlDatabase[req.params.id].longURL = req.body.newURL;
+
+    if (user.id === urlDatabase[req.params.id].userId) {
+      owner = true;
+    } else {
+      owner = false;
+    };
+
+    const templateVars = { 
+      id: req.params.id, 
+      user,
+      longURL: urlDatabase[req.params.id].longURL,
+      owner,
+    };
+    res.render("urls_show", templateVars);
+  }  
 });
 
 app.post("/login", (req, res) => {  
