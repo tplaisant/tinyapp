@@ -19,7 +19,7 @@
         <% if (owner) { %>
         <h5 class="card-title">TinyURL for: <%= longURL %></h5>
         <p class="card-text">
-          Short URL ID: <a href="/urls/<%= id %>"><%= id %></a>
+          Short URL ID: <a href="<%= longURL %>"><%= id %></a>
         </p>
         <form method="POST" action="/urls/<%= id %>/edit">
           <div class="form-group mb-2">

@@ -43,9 +43,8 @@ app.get("/urls", (req, res) => {
     res.render("urls_index", templateVars);  
   } else {
     // If not logged in, go to login page
-    res.redirect('/login');
-  }
-  
+    res.status(400).send('You need to be logged in to access this page');
+  }  
 });
 
 app.get("/register", (req, res) => {
@@ -96,15 +95,18 @@ app.get("/u/:id", (req, res) => {
   const templateVars = {
     user,
   };
-
-  if (typeof user !== 'undefined' && user.id === longURL.userId) {
-    // Can only see a URL if you own it
-    res.redirect(longURL.longURL);
-  } else if (user) {
-    // If logged in but not the owner, go to login page
-    res.redirect('/login');
+  
+  if (typeof user !== 'undefined') {
+    if (typeof longURL === 'undefined') {
+      res.status(400).send('URL does not exist.');
+    } else if (user.id === longURL.userId) {
+      // Can only see a URL if you own it
+      res.redirect(longURL.longURL);
+    } else if (user) {
+      // If logged in but not the owner, go to login page
+      res.redirect('/urls');
+    }
   }  else {
-    // res.render("login", templateVars);
     // If not logged in, go to login page
     res.redirect('/login');
   }
@@ -128,13 +130,14 @@ app.get("/urls/:id", (req, res) => {
     user,
     longURL: urlDatabase[req.params.id].longURL,
     owner: owner,
-  };
+  };  
     // Only the owner is allowed to see this page
     res.render("urls_show", templateVars);
+  } else if (typeof urlDatabase[req.params.id] === 'undefined') {
+    res.status(400).send('URL does not exist.');
   } else {
-    res.render("login");
+    res.status(400).send('You need to be logged in to access this page');
   }
-    
 });
 
 app.post("/register", (req, res) => {  
@@ -167,13 +170,18 @@ app.post("/urls", (req, res) => {
     user,
   };
   if (typeof user !== 'undefined') {
-    // Success. Creates new URL
-    urlDatabase[newURL] = {
-      longURL: req.body.longURL,
+    let url = req.body.longURL;
+    if (url.startsWith("http://")) {
+      // Success. Creates new URL
+      urlDatabase[newURL] = {
+      longURL: url,
       userId: user.id,
-    }
-    // Go to the new page
-    res.redirect(`/urls/${newURL}`)
+      }
+      // Go to the new page
+      res.redirect(`/urls/${newURL}`);
+    } else {
+      res.status(403).send('Please start the URL with `http://`');
+    }    
   } else {
     res.render("login", templateVars);
   }    
@@ -205,26 +213,19 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/urls/:id/edit", (req, res) => {
-  const user = users[req.session.user_id];
-  let owner = false;
-
-  if (typeof user !== 'undefined') {
-    urlDatabase[req.params.id].longURL = req.body.newURL;
-
-    if (user.id === urlDatabase[req.params.id].userId) {
-      owner = true;
+  let url = req.body.newURL;
+  let urlId = req.params.id;
+  
+  if (url !== 'undefined') {
+    if (url.startsWith("http://")) {
+      // Success. Edits URL
+      urlDatabase[urlId].longURL = url;      
+      // Go to url's page
+      res.redirect(`/urls`);
     } else {
-      owner = false;
-    };
-
-    const templateVars = { 
-      id: req.params.id, 
-      user,
-      longURL: urlDatabase[req.params.id].longURL,
-      owner,
-    };
-    res.render("urls_show", templateVars);
-  }  
+      res.status(403).send('Please start the URL with `http://`');
+    }  
+  }         
 });
 
 app.post("/login", (req, res) => {  
